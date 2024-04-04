@@ -1,0 +1,189 @@
+#pragma dynamic 96 * 1024 * 1024 // rozmiar stosu - 96 MB
+
+new Redis:redisClient;
+new itsNotExist;
+
+enum e_ITS_FUNCTIONS
+{
+    Func:ITS_FUNC_READ_ROW<s>,
+    Func:ITS_FUNC_DELETE<d>,
+    Func:ITS_FUNC_UPDATE_QBUILD<dddas>,
+    Func:ITS_FUNC_INSERT_UPDATE_ID<dd>,
+    Func:ITS_FUNC_INSERT_QBUILD<dsd>,
+    Func:ITS_FUNC_UNLOAD<dd>
+};
+
+enum e_ITS_ROTATIONS
+{
+    Float:ITS_ROT_X,
+    Float:ITS_ROT_Y,
+    Float:ITS_ROT_Z
+};
+new Map:itsCustomRotationsForModels;
+
+#define ITS_CATEGORIES_LIMIT 512
+#define ITS_CAT_FRIENDLYNAME_SIZE 96
+#define ITS_CAT_TAG_SIZE 16
+#define ITS_SQL_TABLE_MAX_LEN 128
+#define ITS_SQL_COLUMN_MAX_LEN 64
+#define ITS_SQL_MAX_COLUMNS 200
+enum e_ITS_CATEGORY
+{
+    ITS_CAT_TAG[ITS_CAT_TAG_SIZE],
+    ITS_CAT_FRIENDLYNAME[ITS_CAT_FRIENDLYNAME_SIZE],
+    ITS_CAT_TABLENAME[ITS_SQL_TABLE_MAX_LEN],
+    ITS_CAT_CLTABLENAME[ITS_SQL_TABLE_MAX_LEN],
+    // Poni¿szych wartoœci NIE DA siê odczytaæ przez Its_Get
+    UnmanagedPointer:ITS_ARR,
+    ITS_SIZE,
+    ITS_COUNT,
+    Map:ITS_IDXMAP,
+    List:ITS_HOLES,
+    ITS_ELEM_SIZE,
+    ITS_FUNCTIONS[e_ITS_FUNCTIONS],
+    //Func:ITS_DYNINF_DELETE_FUNC,
+    List:ITS_SQL_COLUMNS, // list nazw kolumn bez 'ID', bo taka kolumna musi wyst¹piæ w ka¿dej tabeli jako pierwsza
+    Map:ITS_UPDATE_DIRTY, // je¿eli wiersza w bazie SQL wymaga aktualizacji, to w mapie istnieje klucz bêd¹cy dbID tego wiersza
+    List:ITS_TO_DELETE,
+    ITS_CLASSES_ARRAY_AMX_ADDR,
+    ITS_CLASS_ELEM_SIZE,
+    List:ITS_TO_INSERT_ADDITIONAL
+};
+new itsCategories[ITS_CATEGORIES_LIMIT][e_ITS_CATEGORY]; //Indeksowane ID bazodanowymi (od 1)
+new BitArray:itsCategoriesUsed<ITS_CATEGORIES_LIMIT>;
+#define itsCategoriesByTag[%1] itsCategories[map_str_get(itsCategoryIDByTag, %1)]
+
+new Map:itsCategoryIDByTag;
+new Map:itsElemSizeByTag;
+new Map:itsClassElemSizeByTag;
+new Map:itsFunctionsByTag;
+new List:itsCategoriesHierarchy;
+new Map:itsClassArrAmxAddrByTag;
+
+#define ITS_IC_CLASS_LIMIT 8096
+#define ITS_CNAME_SIZE 32
+#define ITS_FRIENDLYNAME_SIZE 128
+enum e_ITS_CLASS
+{
+    ITS_CL_IC_CATEGORY,
+    ITS_CL_IC_NAME[ITS_CNAME_SIZE],
+    ITS_CL_IC_FRIENDLYNAME[ITS_FRIENDLYNAME_SIZE],
+    ITS_CL_IC_ISPLACEABLE,
+    ITS_CL_IC_ISPERSISTENT,
+    ITS_CL_IC_ISEQUIPABLE,
+    ITS_CL_IC_MODELID
+};
+new itsClassesIC[ITS_IC_CLASS_LIMIT][e_ITS_CLASS];  //Indeksowane ID bazodanowymi (od 1)
+new BitArray:itsClassesICUsed<ITS_IC_CLASS_LIMIT>;
+
+enum e_ITS_ITEM_CLASS
+{
+    ITS_CL_BI_ITEMSIZE,
+    ITS_CL_BI_RELCONTCLASS
+};
+new itsClassesBI[ITS_IC_CLASS_LIMIT][e_ITS_ITEM_CLASS];  //Indeksowane ID bazodanowymi (od 1)
+new BitArray:itsClassesBIUsed<ITS_IC_CLASS_LIMIT>;
+
+enum e_ITS_CONTAINER_CLASS
+{
+    ITS_CL_BC_CONTAINERSIZE,
+    ITS_CL_BC_EMPTYITEMCLASS
+};
+new itsClassesBC[ITS_IC_CLASS_LIMIT][e_ITS_CONTAINER_CLASS];  //Indeksowane ID bazodanowymi (od 1)
+new BitArray:itsClassesBCUsed<ITS_IC_CLASS_LIMIT>;
+
+#define ITS_IC_INITIAL_LIMIT 3
+#define ITS_NULL -1
+
+enum e_ITS_ITEM_OR_CONTAINER
+{
+    ITS_IC_DBID,
+    ITS_IC_CLASSID,
+    ITS_IC_ISCONTAINER
+};
+
+enum e_ITS_BASIC_CONTAINER
+{
+    ITS_BC_DBID,
+    List:ITS_BC_CONT_ITEMS,
+    ITS_BC_TAKEN_SPACE
+}
+
+enum e_ITS_BASIC_ITEM
+{
+    ITS_BI_ITEM_DBID,
+    ITS_BI_ISEQUIPPED,
+    ITS_BI_PARENTCONTAINER,
+};
+#define ITS_ITEMS_DELIMITER_S its_it33ems
+
+enum e_ITS_IC_POS
+{
+    ITS_POS_DBID,
+    Float:ITS_POS_X,
+    Float:ITS_POS_Y,
+    Float:ITS_POS_Z,
+    ITS_POS_INTERIOR,
+    ITS_POS_VW,
+    ITS_POS_OWNERID,
+    ITS_POS_OBJECTID,
+    ITS_POS_3DTEXTID
+};
+#define ITS_IC_POS_DELIMITER_S its_p00Os
+new Map:itsObjectIDToDbID;
+new Map:its3DTextIDToDbID;
+
+enum e_ITS_PLAYER_CONTAINER
+{
+    ITS_PC_DBID,
+    ITS_PC_UID
+};
+#define ITS_PC_DELIMITER_S its_pl44yacoNNt
+
+enum e_ITS_SPECIAL_MODEL
+{
+    ITS_SPMOD_DBID,
+    ITS_SPMOD_MODELID
+};
+#define ITS_SPMOD_DELIMITER_S its_s3c1jalMoDL
+
+#define ITC_UNINSERTED 900000000
+new firstUninsertedDbId = ITC_UNINSERTED;
+new nextUninsertedDbId = ITC_UNINSERTED;
+
+#define INSERT_SINGLE_SIZE 1024
+#define INSERT_BULK_SIZE 10000
+#define INSERT_QUERY_SIZE (INSERT_SINGLE_SIZE * INSERT_BULK_SIZE)
+
+#define UPDATE_SINGLE_SIZE 2048
+#define UPDATE_BULK_SIZE 300
+#define UPDATE_QUERY_SIZE (UPDATE_SINGLE_SIZE * UPDATE_BULK_SIZE)
+
+#define RSELECT_SINGLE_SIZE 16
+#define RSELECT_BULK_SIZE 200000
+#define RSELECT_QUERY_SIZE (RSELECT_SINGLE_SIZE * RSELECT_BULK_SIZE)
+
+#define DELETE_SINGLE_SIZE 16
+#define DELETE_BULK_SIZE 20000
+#define DELETE_QUERY_SIZE (DELETE_SINGLE_SIZE * DELETE_BULK_SIZE)
+
+new ITS_SELECT_QUERY_BASE[] = "SELECT ic.*, '"#ITS_ITEMS_DELIMITER_S"', i.*, '"#ITS_IC_POS_DELIMITER_S"', p.*, '"#ITS_PC_DELIMITER_S"', pc.*, \
+    '"#ITS_SPMOD_DELIMITER_S"', spmod.* \
+    FROM `mru_items_and_containers` ic \
+    LEFT JOIN `mru_items` i ON ic.ID = i.ID \
+    LEFT JOIN `mru_item_and_container_positions` p ON ic.ID = p.ID \
+    LEFT JOIN `mru_player_containers` pc ON ic.ID = pc.ID \
+    LEFT JOIN `mru_item_special_models` spmod ON ic.ID = spmod.ID";
+
+#define ITS_NOT_ENOUGH_SPACE 101
+#define ITS_CONT_EMPTY_NOT_EXIST 102
+
+#define ITS_PICK_UP_CONTVAR_DIALID 20081
+#define ITS_PICK_UP_CHOOSE_DIALID 20082
+#define ITS_EQUIPMENT_DIALID 20083
+#define COLOR_LIGHTBLUE 0x33CCFFAA
+#define COLOR_ORANGE 0xFF9900AA
+
+new Map:itsChosenPickUpMenu[MAX_PLAYERS];
+new itsChosenContainerID[MAX_PLAYERS] = {ITS_NULL, ...};
+new itsChosenSelectedSize[MAX_PLAYERS];
