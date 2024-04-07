@@ -28,7 +28,7 @@ YCMD:register(playerid, params[], help)
 	mysql_query(query);
     new UID = mysql_insert_id();
 
-    new tempDbID = Its_Create_PC(1, UID);
+    new tempDbID = Its_Create_PC(UID);
 
     new Map:translationMap;
     Its_MassInsert(true, translationMap);
@@ -57,13 +57,12 @@ YCMD:debugcc(playerid, params[], help) //TODO: USUN!!!!!!!!!!!
     {
         if(Bit_Get(itsClassesICUsed, i))
         {
-            printf("[%d]:\n\tcategoryID: %d\n\ttName: %s\n\ttNameFriendly: %s\n\tisPlaceable: %d\n\tisPersistent: %d\n\tisEquipable: %d\n\tmodelID: %d\n", i,
+            printf("[%d]:\n\tcategoryID: %d\n\ttName: %s\n\ttNameFriendly: %s\n\tisPlaceable: %d\n\tisPersistent: %d\n\tmodelID: %d\n", i,
                 itsClassesIC[i][ITS_CL_IC_CATEGORY],
                 itsClassesIC[i][ITS_CL_IC_NAME], 
                 itsClassesIC[i][ITS_CL_IC_FRIENDLYNAME],
                 itsClassesIC[i][ITS_CL_IC_ISPLACEABLE],
                 itsClassesIC[i][ITS_CL_IC_ISPERSISTENT],
-                itsClassesIC[i][ITS_CL_IC_ISEQUIPABLE],
                 itsClassesIC[i][ITS_CL_IC_MODELID]
             );
 
@@ -171,7 +170,7 @@ YCMD:debugcreate(playerid, params[], help) //TODO: USUN!!!!
 {
     for(new i = 0; i < 5000; i++)
     {
-        Its_Create_PC(1, 2);
+        Its_Create_PC(2);
         Its_Create_BC(2);
         Its_Create_BI(3, false, 4);
 

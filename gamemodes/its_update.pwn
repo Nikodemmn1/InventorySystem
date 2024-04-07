@@ -101,6 +101,7 @@ Its_MassUpdate()
     __Its_MassUpdate_Common(query, itsCategoriesByTag["POS"], addressof(Its_POS_UpdQBuild<dddas>));
     __Its_MassUpdate_Common(query, itsCategoriesByTag["PC"], addressof(Its_PC_UpdQBuild<dddas>));
     __Its_MassUpdate_Common(query, itsCategoriesByTag["SPMOD"], addressof(Its_PC_UpdQBuild<dddas>));
+    __Its_MassUpdate_Common(query, itsCategoriesByTag["ATP"], addressof(Its_ATP_UpdQBuild<dddas>));
 
     return 1;
 }

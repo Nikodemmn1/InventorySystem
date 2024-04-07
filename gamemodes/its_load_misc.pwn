@@ -22,7 +22,16 @@ Its_Load_Placed(recursive = true)
 
 Its_Load_Player_Container(uid, recursive = true)
 {
-    new query[512];
+    new query[512], List:loadedIds, loadedID = ITS_NULL;
+
     format(query, sizeof(query), "%s WHERE pc.PLAYERUID = %d", ITS_SELECT_QUERY_BASE, uid);
-    return Its_Load(query, recursive);
+    Its_Load(query, recursive, loadedIds);
+
+    if(list_size(loadedIds) == 1)
+    {
+        loadedID = list_get(loadedIDs, 0);
+    }
+    list_delete(loadedIDs);
+
+    return loadedID;
 }

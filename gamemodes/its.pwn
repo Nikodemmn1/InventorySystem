@@ -1,21 +1,5 @@
 #include <YSI\y_hooks>
 
-mysql_real_escape_string_ITS(const source[],destination[],connectionHandle = 1)
-{
-    strcat(destination, source, 65536);
-    strreplace(destination, #ITS_ITEMS_DELIMITER_S, "", false, 0, -1, 65536);
-    strreplace(destination, #ITS_IC_POS_DELIMITER_S, "", false, 0, -1, 65536);
-    strreplace(destination, #ITS_PC_DELIMITER_S, "", false, 0, -1, 65536);
-
-	return mysql_real_escape_string(destination, destination, connectionHandle = 1);
-}
-#if defined _ALS_mysql_real_escape_string
-    #undef mysql_real_escape_string
-#else
-    #define _ALS_mysql_real_escape_string
-#endif
-#define mysql_real_escape_string mysql_real_escape_string_ITS
-
 hook OnGameModeInit()
 {
     CA_Init();
@@ -34,10 +18,37 @@ hook OnGameModeExit()
     return Y_HOOKS_CONTINUE_RETURN_1;
 }
 
+hook OnPlayerConnect(playerid)
+{
+    new query[256], rowString[256], playerNick[MAX_PLAYER_NAME], uid;
+    
+    GetPlayerName(playerid, playerNick);
+    format(query, sizeof(query), "SELECT UID FROM `mru_konta` WHERE NICK = '%s'", playerNick);
+    mysql_query(query);
+
+    mysql_store_result();
+    mysql_fetch_row_format(rowString, "|");
+    sscanf(rowString, "d", uid);
+    mysql_free_result();
+
+    map_add(playerIDToUID, playerid, uid);
+    map_add(UIDtoPlayerID, uid, playerid);
+
+    return Y_HOOKS_CONTINUE_RETURN_1; 
+}
+
+hook OnPlayerDisconnect(playerid, reason)
+{
+    map_remove(UIDtoPlayerID, map_get(playerIDToUID, playerid));
+    map_remove(playerIDToUID, playerid);
+
+    return Y_HOOKS_CONTINUE_RETURN_1;     
+}
+
 ME_Mysql_Connect()
 {
     new mysqlHost[32], mysqlUser[128], mysqlDb[128], mysqlPass[128];
-	new mysqlConfFName[32] =  "mysql.ini"
+	new mysqlConfFName[32] =  "mysql.ini";
 	if(dini_Exists(mysqlConfFName)) 
 	{
 		strcat(mysqlHost, dini_Get(mysqlConfFName, "Host"));
@@ -135,12 +146,17 @@ Its_Init()
     itsObjectIDToDbID = map_new();
     its3DTextIDToDbID = map_new();
 
+    playerIDToUID = map_new();
+    UIDtoPlayerID = map_new();
+    UIDToContID = map_new();
+
     map_str_add(itsElemSizeByTag, "IC", _:e_ITS_ITEM_OR_CONTAINER);
     map_str_add(itsElemSizeByTag, "BC", _:e_ITS_BASIC_CONTAINER);
     map_str_add(itsElemSizeByTag, "BI", _:e_ITS_BASIC_ITEM);
     map_str_add(itsElemSizeByTag, "POS", _:e_ITS_IC_POS);
     map_str_add(itsElemSizeByTag, "PC", _:e_ITS_PLAYER_CONTAINER);
     map_str_add(itsElemSizeByTag, "SPMOD", _:e_ITS_SPECIAL_MODEL);
+    map_str_add(itsElemSizeByTag, "ATP", _:e_ITS_ITEM_ATTACHMENT);
 
     Its_CategoryFuncs_Construct("IC", 
         addressof(Its_Load_Row_IC<s>), 
@@ -184,6 +200,13 @@ Its_Init()
         Func:0<dd>,
         addressof(Its_SPMOD_InsQBuild<dsd>),
         addressof(Its_Unload_SPMOD<dd>));
+    Its_CategoryFuncs_Construct("ATP", 
+        addressof(Its_Load_Row_ATP<s>), 
+        addressof(Its_Delete_ATP<d>), 
+        addressof(Its_ATP_UpdQBuild<dddas>),
+        Func:0<dd>,
+        addressof(Its_ATP_InsQBuild<dsd>),
+        addressof(Its_Unload_ATP<dd>));
 
     map_str_add(itsClassArrAmxAddrByTag, "IC", ref(itsClassesIC[0]));
     map_str_add(itsClassArrAmxAddrByTag, "BC", ref(itsClassesBC[0]));
@@ -235,6 +258,10 @@ Its_Destroy()
 
     map_delete(itsObjectIDToDbID);
     map_delete(its3DTextIDToDbID);
+
+    map_delete(playerIDToUID);
+    map_delete(UIDtoPlayerID);
+    map_delete(UIDToContID);
 
     map_delete(itsCustomRotationsForModels);
     

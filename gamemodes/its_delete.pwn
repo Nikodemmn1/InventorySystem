@@ -37,10 +37,9 @@ Its_Delete_IC(dbID)
 
     Its_Unload_IC(dbID);
 
-    new cID = map_str_get(itsCategoryIDByTag, "POS");
     if(dbID < ITC_UNINSERTED)
     {
-        list_add(itsCategories[cID][ITS_TO_DELETE], dbID);
+        list_add(itsCategoriesByTag["IC"][ITS_TO_DELETE], dbID);
     }
 
     return 1;
@@ -68,10 +67,9 @@ Its_Delete_POS(dbID)
 
     Its_Unload_POS(dbID, false);
 
-    new cID = map_str_get(itsCategoryIDByTag, "POS");
     if(dbID < ITC_UNINSERTED)
     {
-        list_add(itsCategories[cID][ITS_TO_DELETE], dbID);
+        list_add(itsCategoriesByTag["POS"][ITS_TO_DELETE], dbID);
     }
 
     return 1;
@@ -93,11 +91,24 @@ Its_Delete_SPMOD(dbID)
 
     Its_Unload_SPMOD(dbID, false);
 
-    new cID = map_str_get(itsCategoryIDByTag, "SPMOD");
     if(dbID < ITC_UNINSERTED)
     {
-        list_add(itsCategories[cID][ITS_TO_DELETE], dbID);
+        list_add(itsCategoriesByTag["SPMOD"][ITS_TO_DELETE], dbID);
     }
 
+    return 1;
+}
+
+Its_Delete_ATP(dbID)
+{
+    printf("Its_Delete_ATP dbID: %d", dbID);
+
+    Its_Unload_ATP(dbID, false);
+    
+    if(dbID < ITC_UNINSERTED)
+    {
+        list_add(itsCategoriesByTag["ATP"][ITS_TO_DELETE], dbID);
+    }
+    
     return 1;
 }

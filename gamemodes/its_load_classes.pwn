@@ -62,6 +62,34 @@ Its_Load_Container_Classes()
 
 }
 
+Its_Load_Classes_Attach_Bones()
+{
+    mysql_query("SELECT * FROM `mru_ic_class_attach_info`");
+    mysql_store_result();
+
+    new rowString[384];
+    new classID, bonesAllowed[18];
+
+    while(mysql_fetch_row_format(rowString, "|"))
+    {
+        sscanf(rowString, "p<|>da<d>[18]", classID, bonesAllowed);
+
+        for(new boneIdx = 0; boneIdx < sizeof(bonesAllowed); boneIdx++)
+        {
+            Bit_Set(itsClassesIC[classID][ITS_CL_IC_ATTACH_BONES], boneIdx+1, bool:bonesAllowed[boneIdx]);
+        }
+
+        if(Bit_GetCount(itsClassesIC[classID][ITS_CL_IC_ATTACH_BONES]) > 0)
+        {
+            itsClassesIC[classID][ITS_CL_IC_ISATTACHABLE] = true;
+        }
+    }
+
+    mysql_free_result();
+
+    return 1;
+}
+
 Its_Load_Classes()
 {
     mysql_query("SELECT * FROM `mru_item_and_container_classes`");
@@ -69,9 +97,10 @@ Its_Load_Classes()
     
     new rowString[384];
     new classID, classTmp[e_ITS_CLASS];
+
     while(mysql_fetch_row_format(rowString, "|"))
     {
-        sscanf(rowString, "p<|>de<ds["#ITS_CNAME_SIZE"]s["#ITS_FRIENDLYNAME_SIZE"]lll>D(-1)",
+        sscanf(rowString, "p<|>de<ds["#ITS_CNAME_SIZE"]s["#ITS_FRIENDLYNAME_SIZE"]ll>D(-1)",
             classID,
             classTmp,
             classTmp[ITS_CL_IC_MODELID]
@@ -91,11 +120,16 @@ Its_Load_Classes()
             return 0;
         }
 
+        classTmp[ITS_CL_IC_ISATTACHABLE] = false;
+        Bit_SetAll(classTmp[ITS_CL_IC_ATTACH_BONES], false);
+
         WritePhysMemory(_:MEM_UM_get_addr(itsClassesIC[classID][e_ITS_CLASS:0]), classTmp, _:e_ITS_CLASS);
         Bit_Let(itsClassesICUsed, classID);
     }
 
     mysql_free_result();
+
+    Its_Load_Classes_Attach_Bones();
 
     Its_Load_Item_Classes();
     Its_Load_Container_Classes();

@@ -5,6 +5,7 @@ Its_Unload_IC(dbID, propagate = true)
     printf("Its_Unload_IC dbID: %d", dbID);
     new cID = map_str_get(itsCategoryIDByTag, "IC");
     Its_Unplace(dbID);
+    // TODO: Unattach?
     Its_Pop(dbID, cID);
     return 1;
 }
@@ -82,6 +83,18 @@ Its_Unload_SPMOD(dbID, propagate = true)
     printf("Its_Unload_SPMOD dbID: %d", dbID);
 
     Its_Pop_By_Tag(dbID, "SPMOD");
+    
+    return 1;
+}
+#pragma warning pop
+
+#pragma warning push
+#pragma warning disable 203
+Its_Unload_ATP(dbID, propagate = true)
+{
+    printf("Its_Unload_ATP dbID: %d", dbID);
+
+    Its_Pop_By_Tag(dbID, "ATP");
     
     return 1;
 }

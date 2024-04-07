@@ -10,7 +10,7 @@ Its_BI_InsQBuild(uninsDbId, insertTmpQ[], newDbId)
 {
     format(insertTmpQ, INSERT_SINGLE_SIZE, "(%d, %d, ", 
         newDbId, 
-        Its_Get(uninsDbId, ITS_BI_ISEQUIPPED));
+        Its_Get(uninsDbId, ITS_BI_ISPERMAMENT));
     
     new parentContainer = Its_Get(uninsDbId, ITS_BI_PARENTCONTAINER);
     if(parentContainer == ITS_NULL)
@@ -59,4 +59,22 @@ Its_SPMOD_InsQBuild(uninsDbId, insertTmpQ[], newDbId)
     return format(insertTmpQ, INSERT_SINGLE_SIZE, "(%d, %d), ",
         newDbId,
         Its_Get(uninsDbId, ITS_SPMOD_MODELID));
+}
+
+Its_ATP_InsQBuild(uninsDbId, insertTmpQ[], newDbId)
+{
+    return format(insertTmpQ, INSERT_SINGLE_SIZE, "(%d, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %d, %d), ",
+        newDbId,
+        Its_Get(uninsDbId, ITS_ATP_UID),
+        Float:Its_Get(uninsDbId, ITS_ATP_X),
+        Float:Its_Get(uninsDbId, ITS_ATP_Y),
+        Float:Its_Get(uninsDbId, ITS_ATP_Z),
+        Float:Its_Get(uninsDbId, ITS_ATP_RX),
+        Float:Its_Get(uninsDbId, ITS_ATP_RY),
+        Float:Its_Get(uninsDbId, ITS_ATP_RZ),
+        Float:Its_Get(uninsDbId, ITS_ATP_SX),
+        Float:Its_Get(uninsDbId, ITS_ATP_SY),
+        Float:Its_Get(uninsDbId, ITS_ATP_SZ),
+        Its_Get(uninsDbId, ITS_ATP_BONE),
+        Its_Get(uninsDbId, ITS_ATP_ISACTIVE));
 }

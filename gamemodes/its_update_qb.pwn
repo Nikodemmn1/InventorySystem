@@ -44,7 +44,7 @@ Its_IC_UpdQBuild(dbID, querySize, tmpQueries, tmpQueriesLens[ITS_SQL_MAX_COLUMNS
 
 Its_BI_UpdQBuild(dbID, querySize, tmpQueries, tmpQueriesLens[ITS_SQL_MAX_COLUMNS+1], tmpStr[UPDATE_QUERY_SIZE])
 {
-    __Its_UpdQBuild_Column_Int(dbID, Its_Get(dbID, ITS_BI_ISEQUIPPED), 0, querySize, tmpQueries, tmpQueriesLens, tmpStr);
+    __Its_UpdQBuild_Column_Int(dbID, Its_Get(dbID, ITS_BI_ISPERMAMENT), 0, querySize, tmpQueries, tmpQueriesLens, tmpStr);
 
     new parentContainer = Its_Get(dbID, ITS_BI_PARENTCONTAINER);
     if(parentContainer == ITS_NULL)
@@ -91,3 +91,25 @@ Its_SPMOD_UpdQBuild(dbID, querySize, tmpQueries, tmpQueriesLens[ITS_SQL_MAX_COLU
     __Its_UpdQBuild_Column_Int(dbID, Its_Get(dbID, ITS_SPMOD_MODELID), 0, querySize, tmpQueries, tmpQueriesLens, tmpStr);
     return 1;   
 }
+
+Its_ATP_UpdQBuild(dbID, querySize, tmpQueries, tmpQueriesLens[ITS_SQL_MAX_COLUMNS+1], tmpStr[UPDATE_QUERY_SIZE])
+{
+    __Its_UpdQBuild_Column_Int(dbID, Its_Get(dbID, ITS_ATP_UID), 0, querySize, tmpQueries, tmpQueriesLens, tmpStr);
+
+    __Its_UpdQBuild_Column_Float(dbID, Float:Its_Get(dbID, ITS_ATP_X), 1, querySize, tmpQueries, tmpQueriesLens, tmpStr);
+    __Its_UpdQBuild_Column_Float(dbID, Float:Its_Get(dbID, ITS_ATP_Y), 2, querySize, tmpQueries, tmpQueriesLens, tmpStr);
+    __Its_UpdQBuild_Column_Float(dbID, Float:Its_Get(dbID, ITS_ATP_Z), 3, querySize, tmpQueries, tmpQueriesLens, tmpStr);
+
+    __Its_UpdQBuild_Column_Float(dbID, Float:Its_Get(dbID, ITS_ATP_RX), 4, querySize, tmpQueries, tmpQueriesLens, tmpStr);
+    __Its_UpdQBuild_Column_Float(dbID, Float:Its_Get(dbID, ITS_ATP_RY), 5, querySize, tmpQueries, tmpQueriesLens, tmpStr);
+    __Its_UpdQBuild_Column_Float(dbID, Float:Its_Get(dbID, ITS_ATP_RZ), 6, querySize, tmpQueries, tmpQueriesLens, tmpStr);
+
+    __Its_UpdQBuild_Column_Float(dbID, Float:Its_Get(dbID, ITS_ATP_SX), 7, querySize, tmpQueries, tmpQueriesLens, tmpStr);
+    __Its_UpdQBuild_Column_Float(dbID, Float:Its_Get(dbID, ITS_ATP_SY), 8, querySize, tmpQueries, tmpQueriesLens, tmpStr);
+    __Its_UpdQBuild_Column_Float(dbID, Float:Its_Get(dbID, ITS_ATP_SZ), 9, querySize, tmpQueries, tmpQueriesLens, tmpStr);
+
+    __Its_UpdQBuild_Column_Int(dbID, Its_Get(dbID, ITS_ATP_BONE), 10, querySize, tmpQueries, tmpQueriesLens, tmpStr);
+    __Its_UpdQBuild_Column_Int(dbID, Its_Get(dbID, ITS_ATP_ISACTIVE), 11, querySize, tmpQueries, tmpQueriesLens, tmpStr);
+    return 1;   
+}
+

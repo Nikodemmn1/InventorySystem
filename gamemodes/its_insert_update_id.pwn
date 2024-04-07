@@ -68,7 +68,17 @@ Its_MassInsertIdUpdate(List:newDbIds)
             Its_MassInsertIdUpdate_BI(uninsDbId, newDbId);
             Its_MassInsertIdUpdate_Common(itsCategoriesByTag["POS"], uninsDbId, newDbId);
             Its_MassInsertIdUpdate_Common(itsCategoriesByTag["PC"], uninsDbId, newDbId);
+            //TODO:USUN
+            if(map_has_key(itsCategoriesByTag["PC"][ITS_IDXMAP], uninsDbId))
+            {
+                new uid = Its_Get(uninsDbId, ITS_PC_UID);
+                map_remove(UIDToContID, uid); //TODO: USUN
+                map_add(UIDToContID, uid, newDbId); //TODO: USUN
+                return 0;
+            }
+            //
             Its_MassInsertIdUpdate_Common(itsCategoriesByTag["SPMOD"], uninsDbId, newDbId);
+            Its_MassInsertIdUpdate_Common(itsCategoriesByTag["ATP"], uninsDbId, newDbId);
         }
     }
 

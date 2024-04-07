@@ -31,7 +31,7 @@ Its_Load_Row_BI(const rowString[])
 
     //TODO: USUN
     //printf("inputArrayI:"); //a
-    //printf("%d %d %d", inputArray[ITS_BI_ITEM_DBID], inputArray[ITS_BI_ISEQUIPPED], inputArray[ITS_BI_PARENTCONTAINER]); //a
+    //printf("%d %d %d", inputArray[ITS_BI_ITEM_DBID], inputArray[ITS_BI_ISPERMAMENT], inputArray[ITS_BI_PARENTCONTAINER]); //a
 
     if(inputArray[ITS_BI_ITEM_DBID] != ITS_NULL)
     {
@@ -71,11 +71,12 @@ Its_Load_Row_PC(const rowString[])
     sscanf(rowString, "p<|>'"#ITS_PC_DELIMITER_S"'E<dd>(-1,-1)", inputArray);
 
     //TODO: USUN
-    //printf("inputArrayPC:"); //a
-    //printf("%d %d", inputArray[ITS_PC_DBID], inputArray[ITS_PC_UID]); //a
+    printf("inputArrayPC:"); //a
+    printf("%d %d", inputArray[ITS_PC_DBID], inputArray[ITS_PC_UID]); //a
 
     if(inputArray[ITS_PC_DBID] != ITS_NULL)
     {
+        map_add(UIDToContID, inputArray[ITS_PC_UID], inputArray[ITS_PC_DBID]); //TODO: USUN
         return Its_Push(inputArray[ITS_PC_DBID], inputArray, itsCategoriesByTag["PC"]);
     }
 
@@ -94,6 +95,24 @@ Its_Load_Row_SPMOD(const rowString[])
     if(inputArray[ITS_SPMOD_DBID] != ITS_NULL)
     {
         return Its_Push(inputArray[ITS_SPMOD_DBID], inputArray, itsCategoriesByTag["SPMOD"]);
+    }
+
+    return 1;
+}
+
+Its_Load_Row_ATP(const rowString[])
+{
+    new inputArray[e_ITS_ITEM_ATTACHMENT];
+    sscanf(rowString, "p<|>'"#ITS_ATP_DELIMITER_S"'E<ddfffffffffdd>(-1,-1,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1,-1)", inputArray);
+
+    //TODO: USUN
+    //printf("inputArrayATP:"); //a
+    //printf("%d", inputArray[ITS_ATP_DBID]); //a
+
+    if(inputArray[ITS_ATP_DBID] != ITS_NULL)
+    {
+        return Its_Push(inputArray[ITS_ATP_DBID], inputArray, itsCategoriesByTag["ATP"]);
+        // TODO: UMIEŒÆ TUTAJ JAKOŒ PRZEDMIOT? DODAJ DO LISTY ATTACHEMENTÓW W PLAYERINFO?
     }
 
     return 1;
@@ -149,6 +168,7 @@ Its_Load_Non_Recursive(query[], &List:loadedIDs = List:ITS_NULL)
         Its_Load_Row_SPMOD(rowString);
         Its_Load_Row_POS(rowString);
         Its_Load_Row_PC(rowString);
+        Its_Load_Row_ATP(rowString);
 
         //printf("___________________________________________________", dbID); //a
     }
@@ -168,22 +188,23 @@ Its_Load_Non_Recursive(query[], &List:loadedIDs = List:ITS_NULL)
     return 1;
 }
 
-Its_Load_Recursive(query[])
+Its_Load_Recursive(query[], &List:loadedIDs = List:ITS_NULL)
 {
-    new List:loadedIDs;
-    Its_Load_Non_Recursive(query, loadedIDs);
+    new List:idsList;
+
+    Its_Load_Non_Recursive(query, idsList);
 
     new recursiveQuery[RSELECT_QUERY_SIZE], whereQ[RSELECT_SINGLE_SIZE];
     new listIdx = 0;
 
-    while(listIdx < list_size(loadedIDs))
+    while(listIdx < list_size(idsList))
     {
         new thisBatchSize = 0, anyToLoad = false;
         format(recursiveQuery, sizeof(recursiveQuery), "%s WHERE i.CONTAINERID IN (", ITS_SELECT_QUERY_BASE);
 
-        for(; thisBatchSize < RSELECT_BULK_SIZE && listIdx < list_size(loadedIDs); listIdx++, thisBatchSize++)
+        for(; thisBatchSize < RSELECT_BULK_SIZE && listIdx < list_size(idsList); listIdx++, thisBatchSize++)
         {
-            new newID = list_get(loadedIDs, listIdx);
+            new newID = list_get(idsList, listIdx);
             if(Its_Get(newID, ITS_IC_ISCONTAINER))
             {
                 format(whereQ, RSELECT_SINGLE_SIZE, "%d,", newID);
@@ -199,17 +220,26 @@ Its_Load_Recursive(query[])
         }
     }
 
-    return 1;
-}
-
-Its_Load(query[], recursive)
-{
-    if(recursive)
+    if(loadedIDs != ITS_NULL)
     {
-        return Its_Load_Recursive(query);
+        loadedIDs = idsList;
     }
     else
     {
-        return Its_Load_Non_Recursive(query);
+        list_delete(idsList);
+    }
+
+    return 1;
+}
+
+Its_Load(query[], recursive, &List:loadedIDs = List:ITS_NULL)
+{
+    if(recursive)
+    {
+        return Its_Load_Recursive(query, loadedIDs);
+    }
+    else
+    {
+        return Its_Load_Non_Recursive(query, loadedIDs);
     }
 }

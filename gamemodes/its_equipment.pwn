@@ -3,8 +3,9 @@
 Its_EquipmentMenu_Handle(playerid, response, const inputtext[])
 {
     new dbID;
+    new playerContainerID = map_get(UIDToContID, map_get(playerIDToUID, playerid));
 
-    if(!response || ppContID == ITS_NULL)
+    if(!response || playerContainerID == ITS_NULL)
     {
         return Y_HOOKS_CONTINUE_RETURN_1;
     }
@@ -24,7 +25,7 @@ Its_EquipmentMenu_Handle(playerid, response, const inputtext[])
         vw = GetPlayerVirtualWorld(playerid);
 
         new unplacableInside = false;
-        new List:itemList = List:Its_Get(ppContID, ITS_BC_CONT_ITEMS);
+        new List:itemList = List:Its_Get(playerContainerID, ITS_BC_CONT_ITEMS);
         for(new i = 0; i < list_size(itemList); i++)
         {
             dbID = list_get(itemList, i);
@@ -73,37 +74,38 @@ Its_EquipmentMenu_Handle(playerid, response, const inputtext[])
 
 Its_ShowEquipment(playerid, Map:menuMap)
 {
-    new itemID, name[ITS_FRIENDLYNAME_SIZE], itemSize, isEquippedStr[8];
+    new itemID, name[ITS_FRIENDLYNAME_SIZE], itemSize, isPermamentStr[8];
     new dialogInfo[100*256];
-    format(dialogInfo, sizeof(dialogInfo), "ID\tNazwa\tRozmiar\tZa³o¿ony\n");
-    new List:itemsList = List:Its_Get(ppContID, ITS_BC_CONT_ITEMS);
+    format(dialogInfo, sizeof(dialogInfo), "ID\tNazwa\tRozmiar\tNiezbywalny\n");
+    new playerContainerID = map_get(UIDToContID, map_get(playerIDToUID, playerid));
+    new List:itemsList = List:Its_Get(playerContainerID, ITS_BC_CONT_ITEMS);
     
     for(new i = 0; i < list_size(itemsList); i++)
     {
         itemID = list_get(itemsList, i);
         Its_GetArr(itemID, ITS_CL_IC_FRIENDLYNAME, name, sizeof(name));
         itemSize = Its_Get(itemID, ITS_CL_BI_ITEMSIZE);
-        isEquippedStr = " ";
+        isPermamentStr = " ";
 
-        if(Its_Get(itemID, ITS_BI_ISEQUIPPED))
+        if(Its_Get(itemID, ITS_BI_ISPERMAMENT))
         {
-            isEquippedStr = "TAK";
+            isPermamentStr = "TAK";
         }
 
         if(map_has_key(menuMap, itemID))
         {
-            format(dialogInfo, sizeof(dialogInfo), "%s{33AA33}%d\t{33AA33}%s\t{33AA33}%d\t{33AA33}%s\n", dialogInfo, itemID, name, itemSize, isEquippedStr);
+            format(dialogInfo, sizeof(dialogInfo), "%s{33AA33}%d\t{33AA33}%s\t{33AA33}%d\t{33AA33}%s\n", dialogInfo, itemID, name, itemSize, isPermamentStr);
         }
         else
         {
-            format(dialogInfo, sizeof(dialogInfo), "%s%d\t%s\t%d\t%s\n", dialogInfo, itemID, name, itemSize, isEquippedStr);
+            format(dialogInfo, sizeof(dialogInfo), "%s%d\t%s\t%d\t%s\n", dialogInfo, itemID, name, itemSize, isPermamentStr);
         }
     }
 
     format(dialogInfo, sizeof(dialogInfo), 
         "%s         \t \t \t \n\
         {33CCFF}**\t{33CCFF}Zajêtoœæ ekwipunku:\t{33CCFF}[%d/%d]\t \n", 
-        dialogInfo, Its_Get(ppContID, ITS_BC_TAKEN_SPACE), Its_Get(ppContID, ITS_CL_BC_CONTAINERSIZE));
+        dialogInfo, Its_Get(playerContainerID, ITS_BC_TAKEN_SPACE), Its_Get(playerContainerID, ITS_CL_BC_CONTAINERSIZE));
 
     if(map_size(menuMap) != 0)
     {
@@ -126,15 +128,6 @@ hook OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 YCMD:eq(playerid, params[], help)
 {
-    new query[1000], nick[MAX_PLAYER_NAME], rowString[2048];
-    GetPlayerName(playerid, nick);
-    format(query, 1000, "SELECT pc.ID FROM `mru_player_containers` pc JOIN `mru_konta` mk ON pc.PLAYERUID = mk.UID WHERE mk.Nick = '%s'", nick);
-    mysql_query(query);
-    mysql_store_result();
-    mysql_fetch_row_format(rowString, "|");
-    sscanf(rowString, "d", ppContID);
-    mysql_free_result();
-
     if(map_valid(itsChosenPickUpMenu[playerid]))
     {
         map_clear(itsChosenPickUpMenu[playerid]);

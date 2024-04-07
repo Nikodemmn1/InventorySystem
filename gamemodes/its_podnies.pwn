@@ -1,5 +1,4 @@
 #include <YSI\y_hooks>
-new ppContID = -1; //TODO: WYWAL!!!!
 
 Its_PickupContVarDial_Handle(playerid, response, listitem)
 {
@@ -24,11 +23,21 @@ Its_PickupContVarDial_Handle(playerid, response, listitem)
         itsChosenSelectedSize[playerid] = 0;
         Its_ShowPickupChooseDialog(playerid, containerID, itsChosenPickUpMenu[playerid]);
     }
+    else if(listitem == 3)
+    {
+        new uid = map_get(playerIDToUID, playerid);
+
+        Its_Unplace(containerID);
+        Its_AttachToPlayer(containerID, uid, 1);
+
+        SendClientMessage(playerid, COLOR_WHITE, "przymocowane do pleckow");
+    }
     else
     {
-        new pEqTakenSpace = Its_Get(ppContID, ITS_BC_TAKEN_SPACE);
+        new playerContainerID = map_get(UIDToContID, map_get(playerIDToUID, playerid));
+        new pEqTakenSpace = Its_Get(playerContainerID, ITS_BC_TAKEN_SPACE);
         new containerTakenSpace = Its_Get(containerID, ITS_BC_TAKEN_SPACE);
-        new containerSize = Its_Get(ppContID, ITS_CL_BC_CONTAINERSIZE);
+        new containerSize = Its_Get(playerContainerID, ITS_CL_BC_CONTAINERSIZE);
         new totalSize = pEqTakenSpace + containerTakenSpace;
 
         if(listitem == 0)
@@ -53,11 +62,11 @@ Its_PickupContVarDial_Handle(playerid, response, listitem)
 
         new successMessage[256] = "Przenios³eœ do wyposa¿enia wszystkie przedmioty z pojemnika.";
 
-        Its_MoveAllBetweenContainers(containerID, ppContID);
+        Its_MoveAllBetweenContainers(containerID, playerContainerID);
 
         if(listitem == 0)
         {
-            Its_Container_To_Empty_Item(containerID, ppContID);
+            Its_Container_To_Empty_Item(containerID, playerContainerID);
             successMessage[strlen(successMessage) - 1] = 0;
             format(successMessage, sizeof(successMessage), "%s oraz sam pojemnik.", successMessage);
         }
@@ -71,6 +80,7 @@ Its_PickupContVarDial_Handle(playerid, response, listitem)
 Its_PickupChooseDial_Handle(playerid, response, const inputtext[])
 {
     new containerID = itsChosenContainerID[playerid];
+    new playerContainerID = map_get(UIDToContID, map_get(playerIDToUID, playerid));
     new dbID;
 
     if(!response || containerID == ITS_NULL)
@@ -97,12 +107,12 @@ Its_PickupChooseDial_Handle(playerid, response, const inputtext[])
             dbID = list_get(itemList, i);
             if(map_has_key(itsChosenPickUpMenu[playerid], dbID))
             {
-                if(Its_Get(ppContID, ITS_BC_TAKEN_SPACE) + Its_Get(dbID, ITS_CL_BI_ITEMSIZE) > Its_Get(ppContID, ITS_CL_BC_CONTAINERSIZE))
+                if(Its_Get(playerContainerID, ITS_BC_TAKEN_SPACE) + Its_Get(dbID, ITS_CL_BI_ITEMSIZE) > Its_Get(playerContainerID, ITS_CL_BC_CONTAINERSIZE))
                 {
                     break;
                 }
 
-                Its_Move_Item_To_Container(dbID, ppContID);
+                Its_Move_Item_To_Container(dbID, playerContainerID);
                 i--; // bo wywaliliœmy przedmiot z listy
             }
         }
@@ -119,7 +129,7 @@ Its_PickupChooseDial_Handle(playerid, response, const inputtext[])
         map_remove(itsChosenPickUpMenu[playerid], dbID);
         itsChosenSelectedSize[playerid] -= Its_Get(dbID, ITS_CL_BI_ITEMSIZE);
     }
-    else if(itsChosenSelectedSize[playerid] + Its_Get(ppContID, ITS_BC_TAKEN_SPACE) + Its_Get(dbID, ITS_CL_BI_ITEMSIZE) <= Its_Get(ppContID, ITS_CL_BC_CONTAINERSIZE))
+    else if(itsChosenSelectedSize[playerid] + Its_Get(playerContainerID, ITS_BC_TAKEN_SPACE) + Its_Get(dbID, ITS_CL_BI_ITEMSIZE) <= Its_Get(playerContainerID, ITS_CL_BC_CONTAINERSIZE))
     {
         map_add(itsChosenPickUpMenu[playerid], dbID, true);
         itsChosenSelectedSize[playerid] += Its_Get(dbID, ITS_CL_BI_ITEMSIZE);
@@ -155,7 +165,8 @@ Its_ShowPickupContVariantDialog(playerid, containerID)
     new dialogInfo[3*256] =
         "Przenieœ wszystkie przedmioty z pojemnika do ekwipunku, razem z pustym pojemnikiem\n\
         Wybierz przedmioty, które chcesz zabraæ z pojemnika\n\
-        Przenieœ wszystkie przedmioty do ekwipunku, ale pozostaw pojemnik\n";
+        Przenieœ wszystkie przedmioty do ekwipunku, ale pozostaw pojemnik\n\
+        Za³ó¿ pojemnik na siebie";
 
     ShowPlayerDialog(playerid, ITS_PICK_UP_CONTVAR_DIALID, DIALOG_STYLE_LIST, caption, dialogInfo, "OK", "ANULUJ");
     return 1;
@@ -174,6 +185,7 @@ Its_ShowPickupChooseDialog(playerid, containerID, Map:menuMap)
     format(dialogInfo, sizeof(dialogInfo), "ID\tNazwa\tRozmiar\n");
     new List:itemsList = List:Its_Get(containerID, ITS_BC_CONT_ITEMS);
     new selectedItemsSize = itsChosenSelectedSize[playerid];
+    new playerContainerID = map_get(UIDToContID, map_get(playerIDToUID, playerid));
     
     for(new i = 0; i < list_size(itemsList); i++)
     {
@@ -184,7 +196,7 @@ Its_ShowPickupChooseDialog(playerid, containerID, Map:menuMap)
         {
             format(dialogInfo, sizeof(dialogInfo), "%s{33AA33}%d\t{33AA33}%s\t{33AA33}%d\n", dialogInfo, itemID, name, itemSize);
         }
-        else if(selectedItemsSize + Its_Get(itemID, ITS_CL_BI_ITEMSIZE) + Its_Get(ppContID, ITS_BC_TAKEN_SPACE) > Its_Get(ppContID, ITS_CL_BC_CONTAINERSIZE))
+        else if(selectedItemsSize + Its_Get(itemID, ITS_CL_BI_ITEMSIZE) + Its_Get(playerContainerID, ITS_BC_TAKEN_SPACE) > Its_Get(playerContainerID, ITS_CL_BC_CONTAINERSIZE))
         {
             format(dialogInfo, sizeof(dialogInfo), "%s{FF0000}%d\t{FF0000}%s\t{FF0000}%d\n", dialogInfo, itemID, name, itemSize);
         }
@@ -198,7 +210,7 @@ Its_ShowPickupChooseDialog(playerid, containerID, Map:menuMap)
         "%s\t \t \n\
         {33CCFF}**\t{33CCFF}Zajêtoœæ twojego ekwipunku po podniesieniu:\t{33CCFF}[%d/%d]\n\
         {FF9900}>>\t{FF9900}ZatwierdŸ\t \n", 
-        dialogInfo, Its_Get(ppContID, ITS_BC_TAKEN_SPACE) + selectedItemsSize, Its_Get(ppContID, ITS_CL_BC_CONTAINERSIZE));
+        dialogInfo, Its_Get(playerContainerID, ITS_BC_TAKEN_SPACE) + selectedItemsSize, Its_Get(playerContainerID, ITS_CL_BC_CONTAINERSIZE));
 
     ShowPlayerDialog(playerid, ITS_PICK_UP_CHOOSE_DIALID, DIALOG_STYLE_TABLIST_HEADERS, "Wybierz przedmioty, które chcesz podnieœæ", dialogInfo, "OK", "ANULUJ");
     return 1;
@@ -207,7 +219,7 @@ Its_ShowPickupChooseDialog(playerid, containerID, Map:menuMap)
 YCMD:podnies(playerid, params[], help)
 {
     new strmod[16];
-    new dbID, playerContID;
+    new dbID;
     new Float:x, Float:y, Float:z, Float:distance;
     if(sscanf(params, "d", dbID) || !map_has_key(itsCategoriesByTag["IC"][ITS_IDXMAP], dbID))
     {
@@ -227,19 +239,9 @@ YCMD:podnies(playerid, params[], help)
         return 1;
     }
 
-    new query[1000], nick[MAX_PLAYER_NAME], rowString[2048];
-    GetPlayerName(playerid, nick);
-    format(query, 1000, "SELECT pc.ID FROM `mru_player_containers` pc JOIN `mru_konta` mk ON pc.PLAYERUID = mk.UID WHERE mk.Nick = '%s'", nick);
-    mysql_query(query);
-    mysql_store_result();
-    mysql_fetch_row_format(rowString, "|");
-    sscanf(rowString, "d", playerContID);
-    mysql_free_result();
-    ppContID = playerContID;
-
     if(!Its_Get(dbID, ITS_IC_ISCONTAINER))
     {
-        Its_Move_Item_To_Container(dbID, playerContID);
+        Its_Move_Item_To_Container(dbID, map_get(UIDToContID, map_get(playerIDToUID, playerid)));
         SendClientMessage(playerid, COLOR_WHITE, "przedmiot zostal dodany do twojego ekwipunku!");
     }
     else

@@ -33,6 +33,7 @@ __Its_MassInsert_Additional(query[INSERT_QUERY_SIZE], itsCategoryInfo[e_ITS_CATE
             if(!mysql_query(query))
             {
                 printf("Blad MySql w __Its_MassInsert_Additional(): errno %d!", mysql_errno());
+                printf("Query: %s", query);
                 SendRconCommand("exit");
                 return 0;
             }
@@ -124,6 +125,7 @@ List:Its_MassInsert(freeNewDbIds = true, &Map:idTranslationMap = Map:ITS_NULL)
         __Its_MassInsert_Common(query, newDbIds, itsCategoriesByTag["PC"], addressof(Its_PC_InsQBuild<dsd>));
         __Its_MassInsert_Common(query, newDbIds, itsCategoriesByTag["POS"], addressof(Its_POS_InsQBuild<dsd>));
         __Its_MassInsert_Common(query, newDbIds, itsCategoriesByTag["SPMOD"], addressof(Its_SPMOD_InsQBuild<dsd>));
+        __Its_MassInsert_Common(query, newDbIds, itsCategoriesByTag["ATP"], addressof(Its_ATP_InsQBuild<dsd>));
 
         Its_MassInsertIdUpdate(newDbIds);
 

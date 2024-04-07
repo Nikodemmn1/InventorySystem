@@ -39,7 +39,7 @@
 			"stunt_island2",
 			"ospawner"
 		],
-		"plugins": ["pawnraknet.so", "mysql.so", "redis.so", "libRegEx_static.so"]	
+		"plugins": ["crashdetect.so", "pawnraknet.so", "mysql.so", "redis.so", "libRegEx_static.so"]	
 	},
 	"build": {
 		"name": "",

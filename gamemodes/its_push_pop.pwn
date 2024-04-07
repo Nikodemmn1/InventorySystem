@@ -81,10 +81,10 @@ Its_Push_BC(dbID, List:containedItems, takenSpace)
     return Its_Push(dbID, inputArray, itsCategoriesByTag["BC"]);
 }
 
-Its_Push_BI(dbID, isEquipped, parentContainer)
+Its_Push_BI(dbID, isPermament, parentContainer)
 {
     new inputArray[e_ITS_BASIC_ITEM];
-    inputArray[ITS_BI_ITEM_DBID] = dbID; inputArray[ITS_BI_PARENTCONTAINER] = parentContainer; inputArray[ITS_BI_ISEQUIPPED] = isEquipped;
+    inputArray[ITS_BI_ITEM_DBID] = dbID; inputArray[ITS_BI_PARENTCONTAINER] = parentContainer; inputArray[ITS_BI_ISPERMAMENT] = isPermament;
     return Its_Push(dbID, inputArray, itsCategoriesByTag["BI"]);
 }
 
@@ -109,4 +109,16 @@ Its_Push_SPMOD(dbID, modelID)
     new inputArray[e_ITS_SPECIAL_MODEL];
     inputArray[ITS_SPMOD_DBID] = dbID; inputArray[ITS_SPMOD_MODELID] = modelID;
     return Its_Push(dbID, inputArray, itsCategoriesByTag["SPMOD"]);
+}
+
+Its_Push_ATP(dbID, uid, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz, Float:sx, Float:sy, Float:sz, bone, isActive, index)
+{
+    new inputArray[e_ITS_ITEM_ATTACHMENT];
+    inputArray[ITS_ATP_DBID] = dbID; inputArray[ITS_ATP_UID] = uid;
+    inputArray[ITS_ATP_X] = x; inputArray[ITS_ATP_Y] = y; inputArray[ITS_ATP_Z] = z;
+    inputArray[ITS_ATP_RX] = rx; inputArray[ITS_ATP_RY] = ry; inputArray[ITS_ATP_RZ] = rz;
+    inputArray[ITS_ATP_SX] = sx; inputArray[ITS_ATP_SY] = sy; inputArray[ITS_ATP_SZ] = sz;
+    inputArray[ITS_ATP_BONE] = bone; inputArray[ITS_ATP_ISACTIVE] = isActive; inputArray[ITS_ATP_INDEX] = index;
+
+    return Its_Push(dbID, inputArray, itsCategoriesByTag["ATP"]);
 }
